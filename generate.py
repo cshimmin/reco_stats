@@ -10,12 +10,7 @@ import time
 ##############################################################
 
 # phone detector parameters
-DET_DENSITY = 1000 # devices/km^2
-DET_AREA = 0.005 # m^2
-DET_EFF = 1e-4
-
-# minimum number of coincident hits to require
-MIN_HITS = 10
+DET_AREA = 2e-5 # m^2
 
 # size of the field over which to simulate. 1km seems to work okay,
 # probaly could be smaller
@@ -91,7 +86,7 @@ particles that hit each detector, given their positions and the LDF.
 
 returns a list of (x,y) pairs for phones that had at least one hit.
 '''
-def get_hits(pdf, grid):
+def get_hits(pdf, grid, eff):
     device_hits = []
     for x,y in grid:
         # get flux at sample point (particles / m^2)
@@ -99,7 +94,7 @@ def get_hits(pdf, grid):
         # get incident particles
         incident = flux * DET_AREA
         # get expected hits
-        exp_hits = incident * DET_EFF
+        exp_hits = incident * eff
         # now sample the actual hits from poisson distribution
         actual_hits = sci.random.poisson(exp_hits)
         if actual_hits >= 1:
@@ -126,6 +121,10 @@ def pretty_plot(grid, hits, overlay=None):
         X, Y, Z = overlay
         pl.contour(Z, extent=[np.min(X), np.max(X), np.min(Y), np.max(Y)], linewidths=2.0)
 
+    # label the axes
+    pl.xlabel('meters')
+    pl.ylabel('meters')
+
 '''
 Generate the an X,Y mesh grid, and sample the pdf
 over it; used to make contour plots
@@ -147,11 +146,11 @@ if __name__ == "__main__":
     parser.add_argument('--out', help='output filename')
     parser.add_argument('-s', '--seed', type=int, help='Use a specific seed')
     parser.add_argument('-i', '--interactive', action='store_true', help='Plot in interactive mode.')
-    parser.add_argument('--nhits', type=int, default=MIN_HITS, help='minimum number of detector hits required for events')
+    parser.add_argument('--nhits', type=int, default=10, help='minimum number of coincident detector hits required for events')
     parser.add_argument('--nevents', type=int, default=10000, help='number of events to generate')
-    parser.add_argument('--eff', type=float, default=DET_EFF, help='the detection efficiency of the phones')
-    parser.add_argument('-N', '--ndetectors', type=int, default=DET_DENSITY, help='the number of detectors per km^2')
-    parser.add_argument('--age', type=float, default=1, help='shower age parameter')
+    parser.add_argument('--eff', type=float, default=1e-4, help='the detection efficiency of the phones')
+    parser.add_argument('-N', '--ndetectors', type=int, default=1000, help='the number of detectors per km^2')
+    parser.add_argument('--age', type=float, default=1.8, help='shower age parameter')
     parser.add_argument('--theta', type=float, default=0, help='zenith angle of incident particle')
     parser.add_argument('--phi', type=float, default=0, help='azimutal angle of incident particle')
     parser.add_argument('--energy', default=1e19, type=float, help='the energy (in eV) of the primary particle')
@@ -166,11 +165,6 @@ if __name__ == "__main__":
 
     if args.interactive:
         pl.ion()
-
-    # set some ugly global params...
-    DET_EFF = args.eff
-    DET_DENSITY = args.ndetectors
-    MIN_HITS = args.nhits
 
     # set up the initial detector grid
     np.random.seed(seed)
@@ -209,15 +203,15 @@ if __name__ == "__main__":
             print "Generating %d / %d" % (total_samples, args.nevents)
 
         # regenerate the random phone grid
-        grid = make_detector_array(DET_DENSITY)
+        grid = make_detector_array(args.ndetectors)
 
-        device_hits = get_hits(ldf, grid)
+        device_hits = get_hits(ldf, grid, args.eff)
         total_samples += 1
         
         if args.out:
             output.write_result(device_hits)
 
-        if len(device_hits) < MIN_HITS:
+        if len(device_hits) < args.nhits:
             # cut this event, and start over
             continue
         reco_samples += 1
