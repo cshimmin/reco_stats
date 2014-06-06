@@ -146,10 +146,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate pseudo-experiments of phone hits from LDF")
     parser.add_argument('-s', '--seed', type=int, help='Use a specific seed')
     parser.add_argument('-i', '--interactive', action='store_true', help='Plot in interactive mode.')
-    parser.add_argument('--nhits', type=int, default=5, help='minimum number of detector hits required for events')
+    parser.add_argument('--nhits', type=int, default=MIN_HITS, help='minimum number of detector hits required for events')
     parser.add_argument('--nevents', type=int, default=10000, help='number of events to generate')
-    parser.add_argument('--eff', type=float, default=1e-5, help='the detection efficiency of the phones')
-    parser.add_argument('-N', '--ndetectors', type=int, default=100, help='the number of detectors per km^2')
+    parser.add_argument('--eff', type=float, default=DET_EFF, help='the detection efficiency of the phones')
+    parser.add_argument('-N', '--ndetectors', type=int, default=DET_DENSITY, help='the number of detectors per km^2')
     parser.add_argument('--age', type=float, default=1, help='shower age parameter')
     parser.add_argument('--theta', type=float, default=0, help='zenith angle of incident particle')
     parser.add_argument('--phi', type=float, default=0, help='azimutal angle of incident particle')
@@ -169,6 +169,7 @@ if __name__ == "__main__":
     # set some ugly global params...
     DET_EFF = args.eff
     DET_DENSITY = args.ndetectors
+    MIN_HITS = args.nhits
 
     # set up the initial detector grid
     np.random.seed(seed)
