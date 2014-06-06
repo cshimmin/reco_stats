@@ -144,6 +144,7 @@ def make_overlay(pdf):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Generate pseudo-experiments of phone hits from LDF")
+    parser.add_argument('--out', help='output filename')
     parser.add_argument('-s', '--seed', type=int, help='Use a specific seed')
     parser.add_argument('-i', '--interactive', action='store_true', help='Plot in interactive mode.')
     parser.add_argument('--nhits', type=int, default=MIN_HITS, help='minimum number of detector hits required for events')
@@ -188,17 +189,33 @@ if __name__ == "__main__":
     total_samples = 0
     reco_samples = 0
 
+    if args.out:
+        from output import reco_output
+        output = reco_output(args.out, args.nhits)
+        output.eff = args.eff
+        output.density = args.ndetectors
+        output.energy = args.energy
+        output.theta = args.theta
+        output.phi = args.phi
+
+    update_interval = args.nevents/10
     start_time = time.time()
     while True:
         if not args.interactive and args.nevents>0 and total_samples >= args.nevents:
             # we're done here!
             break
 
+        if total_samples%update_interval==0:
+            print "Generating %d / %d" % (total_samples, args.nevents)
+
         # regenerate the random phone grid
         grid = make_detector_array(DET_DENSITY)
 
         device_hits = get_hits(ldf, grid)
         total_samples += 1
+        
+        if args.out:
+            output.write_result(device_hits)
 
         if len(device_hits) < MIN_HITS:
             # cut this event, and start over
@@ -217,6 +234,9 @@ if __name__ == "__main__":
             if action == 'q':
                 # we're done here.
                 break
+
+    if args.out:
+        output.close()
 
     print "Done. Generated %d events in %ds" % (reco_samples, time.time()-start_time)
     print "Generator efficiency: %.2f%%" % (100.*reco_samples/total_samples)
