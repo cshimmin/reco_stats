@@ -5,6 +5,7 @@ import numpy as np
 import pylab as pl
 import time
 
+MAX_HIT = 0
 ##############################################################
 # simulation parameters (most are adjustable via command-line)
 ##############################################################
@@ -93,6 +94,7 @@ particles that hit each detector, given their positions and the LDF.
 returns a list of (x,y) pairs for phones that had at least one hit.
 '''
 def get_hits(pdf, grid, eff):
+    global MAX_HIT
     device_hits = []
     for x,y in grid:
         # get flux at sample point (particles / m^2)
@@ -105,6 +107,10 @@ def get_hits(pdf, grid, eff):
         actual_hits = sci.random.poisson(exp_hits)
         if actual_hits >= 1:
             device_hits.append((x,y))
+            print "device was hit:", actual_hits
+            if actual_hits>MAX_HIT:
+                MAX_HIT = actual_hits
+                print "NEW MAXIMUM HIT:",MAX_HIT
     return np.array(device_hits)
 
 '''
