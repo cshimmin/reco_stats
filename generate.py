@@ -10,9 +10,6 @@ MAX_HIT = 0
 # simulation parameters (most are adjustable via command-line)
 ##############################################################
 
-# phone detector parameters
-DET_AREA = 2e-5 # m^2
-
 # size of the field over which to simulate. 1km seems to work okay,
 # probaly could be smaller
 GRID_WIDTH = 1000 # m
@@ -99,10 +96,8 @@ def get_hits(pdf, grid, eff):
     for x,y in grid:
         # get flux at sample point (particles / m^2)
         flux = pdf(x, y)
-        # get incident particles
-        incident = flux * DET_AREA
-        # get expected hits
-        exp_hits = incident * eff
+        # get expected hits (lambda, in the paper)
+        exp_hits = flux * eff
         # now sample the actual hits from poisson distribution
         actual_hits = sci.random.poisson(exp_hits)
         if actual_hits >= 1:
@@ -160,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--interactive', action='store_true', help='Plot in interactive mode.')
     parser.add_argument('--nhits', type=int, default=10, help='minimum number of coincident detector hits required for events')
     parser.add_argument('--nevents', type=int, default=10000, help='number of events to generate')
-    parser.add_argument('--eff', type=float, default=1e-4, help='the detection efficiency of the phones')
+    parser.add_argument('--eff', type=float, default=1e-4, help='the effective area (efficiency*A) of the individual phones [in m^2]')
     parser.add_argument('-N', '--ndetectors', type=int, default=1000, help='the number of detectors per km^2')
     parser.add_argument('--age', type=float, default=1.8, help='shower age parameter')
     parser.add_argument('--theta', type=float, default=0, help='zenith angle of incident particle')
