@@ -57,6 +57,12 @@ def make_shower_ldf(energy, theta=0, phi=0, s=1):
     # shower size is proportial to energy,
     # see EAS (4.88)
     N = energy/E_critical
+
+    # HACK:
+    # for muons, the normalization is about 3 orders lower
+    # than for photons. would be better to get a muon-specific
+    # LDF.
+    N *= 1e-3
     
     eta = eta_fn(theta, N)
     alpha = 2-s
