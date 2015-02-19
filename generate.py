@@ -102,10 +102,8 @@ def get_hits(pdf, grid, eff):
         actual_hits = sci.random.poisson(exp_hits)
         if actual_hits >= 1:
             device_hits.append((x,y))
-            print "device was hit:", actual_hits
             if actual_hits>MAX_HIT:
                 MAX_HIT = actual_hits
-                print "NEW MAXIMUM HIT:",MAX_HIT
     return np.array(device_hits)
 
 '''
