@@ -50,7 +50,7 @@ def shower_fit(E0, density, grid_size, Ae, T):
         print >> sys.stderr, res
     efit = 10**(res.x[0])
     x,y = res.x[1:]
-    return efit, x, y
+    return efit, x, y, res.success
 
 if __name__ == '__main__':
     import argparse
@@ -59,22 +59,30 @@ if __name__ == '__main__':
     parser.add_argument("--size", type=float, default=500, help="grid size [m]")
     parser.add_argument("--Ae", type=float, default=5e-5, help="effective area A*epsilon [m^2]")
     parser.add_argument("-T", type=float, default=2, help="coincidence window [s]")
-    parser.add_argument("-E", type=float, default=1e20, help="primary shower energy [eV] (none for no shower)")
+    parser.add_argument("-E", type=float, default=20, help="Log10 of the primary shower energy [eV] (none for no shower)")
     parser.add_argument("-N", type=int, default=1, help="number of trials")
-    parser.add_argument("--out", help="output filename")
     parser.add_argument("--plot", action="store_true", help="show plot of results as the come in")
+    parser.add_argument("--out", required=True, help="output filename")
     args = parser.parse_args()
 
-    import pylab as pl
-    pl.ion()
+    if args.plot:
+        import pylab as pl
+        pl.ion()
+
+    if args.E:
+        E0 = 10**args.E
+    else:
+        E0 = None
 
     energies = []
     distances = []
     results = []
     for i in xrange(args.N):
-        print "Generating %d/%d" % (i+1, args.N)
-        efit, x, y = shower_fit(args.E, args.density, args.size, args.Ae, args.T)
-        results.append([efit, x, y])
+	if i%10==0:
+            print "Generating %d/%d" % (i+1, args.N)
+	    sys.stdout.flush()
+        efit, x, y, succ = shower_fit(E0, args.density, args.size, args.Ae, args.T)
+        results.append([efit, x, y, succ])
         #print i, efit, x, y
 
         if not args.plot: continue
@@ -83,7 +91,7 @@ if __name__ == '__main__':
         distances.append(dist)
         pl.figure(0)
         pl.clf()
-        pl.hist(np.array(energies)/args.E, bins=25)
+        pl.hist(np.array(energies)/E0, bins=25)
         pl.draw()
         pl.figure(1)
         pl.clf()
@@ -95,6 +103,6 @@ if __name__ == '__main__':
 
     if args.out:
         import pandas as pd
-        df = pd.DataFrame(results, columns=['E', 'x', 'y'])
-        df.to_hdf(args.out, 'fits', mode='w')
+        df = pd.DataFrame(results, columns=['E', 'x', 'y', 'success'])
+        df.to_csv(args.out, mode='w')
         #np.save(args.out, results)
