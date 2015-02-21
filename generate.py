@@ -73,16 +73,15 @@ def make_shower_ldf(energy, theta=0, phi=0, s=1):
 
     # unit vector pointing in the direction of the shower core:
     n_hat = np.array([np.cos(phi)*np.sin(theta), np.sin(phi)*np.sin(theta), np.cos(theta)])
-    def ldf(x, y):
-        p = np.array([x,y,0])
+    def ldf(points):
+        # promote the 2D vector points to 3d vector points
+        pts = np.hstack([points, np.zeros((len(points),1))])
         # vector distance from point p to line
-        d = (n_hat.dot(p))*n_hat - p
-        r = np.sqrt(sum(d**2))
+        d = np.outer((n_hat.dot(pts.T)), n_hat) - pts
+        r = np.sqrt(np.sum(d**2, axis=1))
         return N / (2*np.pi*rM**2) * (r/rM)**(-alpha) * (1 + r/rM)**(-(eta-alpha)) * gamma_factor
 
-    # have numpy vectorize the function so we can
-    # give it whole arrays of (x,y) values.
-    return np.vectorize(ldf)
+    return ldf
 
 '''
 draw from a poisson distribution to calculate the number of
