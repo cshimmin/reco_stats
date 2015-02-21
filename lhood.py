@@ -62,8 +62,12 @@ if __name__ == '__main__':
     parser.add_argument("-E", type=float, default=20, help="Log10 of the primary shower energy [eV] (none for no shower)")
     parser.add_argument("-N", type=int, default=1, help="number of trials")
     parser.add_argument("--plot", action="store_true", help="show plot of results as the come in")
+    parser.add_argument("--seed", type=int, help="set specific random seed")
     parser.add_argument("--out", required=True, help="output filename")
     args = parser.parse_args()
+
+    if args.seed:
+        np.random.seed(args.seed)
 
     if args.plot:
         import pylab as pl
