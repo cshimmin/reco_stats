@@ -12,7 +12,7 @@ def expectations(ldf, grid, Ae, T):
     noise = 1e4/60*T*Ae * np.ones(len(grid))
     if ldf==None:
         return noise
-    return Ae*np.array([ldf(x,y) for x,y in grid]) + noise
+    return Ae*ldf(grid[:,0], grid[:,1]) + noise
 
 def llhood(ldf, hits, nohits, Ae, T):
     p1 = np.log(1.-np.exp(-1.*expectations(ldf, hits, Ae, T)))
